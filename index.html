@@ -415,7 +415,6 @@
     <div class="toolbar">
         <h3 style="color: var(--text-dark);">Tabla Dinámica de Pagos</h3>
         <div class="action-buttons">
-            <button class="btn btn-outline no-print" onclick="addMonthRow()">+ Agregar Mes</button>
             <button class="btn btn-pdf no-print" onclick="window.print()">📄 Exportar Tabla a PDF</button>
         </div>
     </div>
@@ -764,14 +763,6 @@
         function updateAbono(month, value) {
             const active = appState.credits[appState.activeId];
             active.customAbonos[month] = Math.max(0, parseFloat(value) || 0);
-            saveState();
-            recalculateTable();
-        }
-
-        function addMonthRow() {
-            const active = appState.credits[appState.activeId];
-            const currentRows = document.querySelectorAll('#scheduleBody tr').length;
-            active.customAbonos[currentRows + 1] = parseFloat(document.getElementById('defaultAbono').value) || 0;
             saveState();
             recalculateTable();
         }
