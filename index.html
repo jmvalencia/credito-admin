@@ -117,13 +117,21 @@
         
         .grid-container {
             display: grid;
-            grid-template-columns: minmax(320px, 1fr) 2.2fr;
+            grid-template-columns: 1fr;
             gap: 20px;
             margin-bottom: 25px;
         }
 
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px 20px;
+        }
+
+        .config-grid .full { grid-column: 1 / -1; }
+
         @media (max-width: 850px) {
-            .grid-container { grid-template-columns: 1fr; }
+            .config-grid { grid-template-columns: 1fr; }
         }
 
         .card {
@@ -153,15 +161,28 @@
             margin-bottom: 5px;
         }
 
-        input[type="number"], input[type="text"], input[type="password"] {
+        input[type="number"], input[type="text"], input[type="password"], select.form-select {
             width: 100%;
             padding: 9px 12px;
             border: 1px solid var(--border);
             border-radius: 6px;
             font-size: 0.9rem;
             outline: none;
+            background-color: #fff;
         }
-        input:focus { border-color: var(--accent); }
+        input:focus, select.form-select:focus { border-color: var(--accent); }
+        input:disabled {
+            background-color: #f1f5f9;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        .hint {
+            display: block;
+            font-size: 0.72rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
 
         .gist-box {
             background-color: #f8fafc;
@@ -181,8 +202,15 @@
 
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 12px;
+        }
+
+        @media (max-width: 1100px) {
+            .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
         }
         .kpi-card {
             background: #f1f5f9;
@@ -298,32 +326,57 @@
         <!-- Input Parameters Card -->
         <div class="card">
             <div class="card-title">1. Configuración del Crédito</div>
-            <div class="form-group">
-                <label for="creditAmount">Monto Inicial Prestado (COP):</label>
-                <input type="number" id="creditAmount" step="500000" min="100000" onchange="onLocalChange()">
-            </div>
-            <div class="form-group">
-                <label for="interestRate">Tasa de Interés Mensual (%):</label>
-                <input type="number" id="interestRate" step="0.1" min="0" onchange="onLocalChange()">
-            </div>
-            <div class="form-group">
-                <label for="defaultAbono">Abono Mensual Sugerido (COP):</label>
-                <input type="number" id="defaultAbono" step="50000" onchange="onLocalChange()">
-            </div>
+            <div class="config-grid">
+                <div class="form-group">
+                    <label for="creditAmount">Monto Inicial Prestado (COP):</label>
+                    <input type="number" id="creditAmount" step="500000" min="100000" onchange="onLocalChange()">
+                </div>
+                <div class="form-group">
+                    <label for="interestRate">Tasa de Interés Mensual (%):</label>
+                    <input type="number" id="interestRate" step="0.1" min="0" onchange="onLocalChange()">
+                </div>
+                <div class="form-group">
+                    <label for="rateMode">Método de Cálculo de Tasa:</label>
+                    <select id="rateMode" class="form-select" onchange="onLocalChange()">
+                        <option value="directa">Directa / Efectiva Mensual</option>
+                        <option value="excel">Conversión Anualizada (Estilo Excel)</option>
+                    </select>
+                    <span class="hint">"Excel" convierte a EA y la divide entre 12 (para igualar plantillas).</span>
+                </div>
+                <div class="form-group">
+                    <label for="plazo">Plazo (meses) — Opcional:</label>
+                    <input type="number" id="plazo" step="1" min="0" placeholder="Ej: 36" onchange="onPlazoChange()">
+                    <span class="hint">Al definirlo, la cuota se calcula y bloquea. Limpia para desbloquear.</span>
+                </div>
+                <div class="form-group">
+                    <label for="cuotaFija">Cuota Fija Mensual (COP) — Opcional:</label>
+                    <input type="number" id="cuotaFija" step="10000" min="0" placeholder="Ej: 900000" onchange="onCuotaChange()">
+                    <span class="hint">Al definirla, el plazo se calcula y bloquea. Limpia para desbloquear.</span>
+                </div>
+                <div class="form-group">
+                    <label for="defaultAbono">Abono Extra a Capital (COP):</label>
+                    <input type="number" id="defaultAbono" step="50000" min="0" onchange="onLocalChange()">
+                    <span class="hint">Sin cuota fija/plazo, este valor es el abono a capital completo.</span>
+                </div>
 
-            <div class="gist-box">
-                <h4>☁️ Conexión GitHub Gist Cloud</h4>
-                <div class="form-group" style="margin-bottom: 8px;">
-                    <label for="gistId" style="font-size: 0.78rem;">Gist ID:</label>
-                    <input type="text" id="gistId" placeholder="Ej: 7ad860f7e152cb6fdf84d1d13f86eced" onchange="saveCredentials()">
+                <div class="gist-box full">
+                    <h4>☁️ Conexión GitHub Gist Cloud</h4>
+                    <div class="config-grid" style="gap: 10px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="gistId" style="font-size: 0.78rem;">Gist ID:</label>
+                            <input type="text" id="gistId" placeholder="Ej: 7ad860f7e152cb6fdf84d1d13f86eced" onchange="saveCredentials()">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="githubToken" style="font-size: 0.78rem;">GitHub Token (PAT 'gist'):</label>
+                            <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx" onchange="saveCredentials()">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+                            <button class="btn btn-github" style="width: 100%; justify-content: center;" onclick="loadFromGistCloud()">
+                                🔄 Sincronizar de la Nube
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label for="githubToken" style="font-size: 0.78rem;">GitHub Token (PAT 'gist'):</label>
-                    <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx" onchange="saveCredentials()">
-                </div>
-                <button class="btn btn-github" style="width: 100%; justify-content: center;" onclick="loadFromGistCloud()">
-                    🔄 Sincronizar de la Nube
-                </button>
             </div>
         </div>
 
@@ -426,8 +479,9 @@
         const GIST_ID_KEY = 'github_gist_id';
         const GITHUB_TOKEN_KEY = 'github_pat_token';
 
-        const formatCOP = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+        const formatCOP = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
         const getTodayString = () => new Date().toLocaleDateString('es-CO');
+        const round2 = (val) => Math.round(val * 100) / 100;
 
         // Main State Object
         let appState = {
@@ -438,6 +492,9 @@
                     creditAmount: 10000000,
                     interestRate: 2.0,
                     defaultAbono: 1000000,
+                    rateMode: 'directa',
+                    plazo: null,
+                    cuotaFija: null,
                     customAbonos: {},
                     paidStatus: {} // month -> date_string (if paid)
                 }
@@ -489,7 +546,16 @@
             active.creditAmount = parseFloat(document.getElementById('creditAmount').value) || 0;
             active.interestRate = parseFloat(document.getElementById('interestRate').value) || 0;
             active.defaultAbono = parseFloat(document.getElementById('defaultAbono').value) || 0;
-            
+            active.rateMode = document.getElementById('rateMode').value || 'directa';
+
+            // Persist only the user-driven value (the enabled one)
+            const plazoInput = document.getElementById('plazo');
+            const cuotaInput = document.getElementById('cuotaFija');
+            const plazoVal = parseInt(plazoInput.value, 10);
+            const cuotaVal = parseFloat(cuotaInput.value);
+            active.plazo = (!plazoInput.disabled && Number.isFinite(plazoVal) && plazoVal > 0) ? plazoVal : null;
+            active.cuotaFija = (!cuotaInput.disabled && Number.isFinite(cuotaVal) && cuotaVal > 0) ? cuotaVal : null;
+
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
 
             clearTimeout(syncDebounceTimer);
@@ -503,15 +569,120 @@
             document.getElementById('creditAmount').value = active.creditAmount;
             document.getElementById('interestRate').value = active.interestRate;
             document.getElementById('defaultAbono').value = active.defaultAbono;
-            
+            document.getElementById('rateMode').value = active.rateMode || 'directa';
+
+            const plazoInput = document.getElementById('plazo');
+            const cuotaInput = document.getElementById('cuotaFija');
+            if (active.plazo && !active.cuotaFija) {
+                plazoInput.value = active.plazo;
+                cuotaInput.value = '';
+                plazoInput.disabled = false;
+                cuotaInput.disabled = true;
+            } else if (active.cuotaFija && !active.plazo) {
+                cuotaInput.value = active.cuotaFija;
+                plazoInput.value = '';
+                cuotaInput.disabled = false;
+                plazoInput.disabled = true;
+            } else {
+                plazoInput.value = '';
+                cuotaInput.value = '';
+                plazoInput.disabled = false;
+                cuotaInput.disabled = false;
+            }
+
             // Make sure legacy arrays/objects exist
             if(!active.customAbonos) active.customAbonos = {};
             if(!active.paidStatus) active.paidStatus = {};
-            
+
+            syncPlazoCuota();
             recalculateTable();
         }
 
+        function getEffectiveRate() {
+            const rawRate = (parseFloat(document.getElementById('interestRate').value) || 0) / 100;
+            const rateMode = document.getElementById('rateMode').value || 'directa';
+            if (rateMode === 'excel' && rawRate > 0) {
+                const tasaEA = Math.pow(1 + rawRate, 12) - 1;
+                return tasaEA / 12;
+            }
+            return rawRate;
+        }
+
+        function computeCuotaFromPlazo(monto, rate, plazo) {
+            if (monto <= 0 || plazo <= 0) return 0;
+            if (rate <= 0) return monto / plazo;
+            return monto * (rate * Math.pow(1 + rate, plazo)) / (Math.pow(1 + rate, plazo) - 1);
+        }
+
+        function computePlazoFromCuota(monto, rate, cuota) {
+            if (monto <= 0 || cuota <= 0) return 0;
+            if (rate <= 0) return Math.ceil(monto / cuota);
+            if (cuota <= monto * rate) return 0;
+            return Math.ceil(Math.log(cuota / (cuota - monto * rate)) / Math.log(1 + rate));
+        }
+
+        function syncPlazoCuota() {
+            const plazoInput = document.getElementById('plazo');
+            const cuotaInput = document.getElementById('cuotaFija');
+            const monto = parseFloat(document.getElementById('creditAmount').value) || 0;
+            const rate = getEffectiveRate();
+
+            if (cuotaInput.disabled) {
+                const plazo = parseInt(plazoInput.value, 10);
+                if (Number.isFinite(plazo) && plazo > 0) {
+                    cuotaInput.value = round2(computeCuotaFromPlazo(monto, rate, plazo));
+                }
+            } else if (plazoInput.disabled) {
+                const cuota = parseFloat(cuotaInput.value);
+                if (Number.isFinite(cuota) && cuota > 0) {
+                    const n = computePlazoFromCuota(monto, rate, cuota);
+                    plazoInput.value = n || '';
+                }
+            }
+        }
+
+        function onPlazoChange() {
+            const plazoInput = document.getElementById('plazo');
+            const cuotaInput = document.getElementById('cuotaFija');
+            const plazo = parseInt(plazoInput.value, 10);
+            if (Number.isFinite(plazo) && plazo > 0) {
+                cuotaInput.disabled = true;
+                plazoInput.disabled = false;
+            } else {
+                plazoInput.value = '';
+                cuotaInput.disabled = false;
+                cuotaInput.value = '';
+            }
+            onLocalChange();
+        }
+
+        function onCuotaChange() {
+            const plazoInput = document.getElementById('plazo');
+            const cuotaInput = document.getElementById('cuotaFija');
+            const cuota = parseFloat(cuotaInput.value);
+            if (Number.isFinite(cuota) && cuota > 0) {
+                const monto = parseFloat(document.getElementById('creditAmount').value) || 0;
+                const rate = getEffectiveRate();
+                if (monto > 0 && rate > 0 && cuota <= monto * rate) {
+                    alert('La cuota no cubre los intereses del primer mes. Aumenta la cuota o revisa la tasa.');
+                    cuotaInput.value = '';
+                    plazoInput.disabled = false;
+                    cuotaInput.disabled = false;
+                    onLocalChange();
+                    return;
+                }
+                plazoInput.disabled = true;
+                cuotaInput.disabled = false;
+            } else {
+                cuotaInput.value = '';
+                plazoInput.disabled = false;
+                plazoInput.value = '';
+            }
+            onLocalChange();
+        }
+
         function onLocalChange() {
+            syncPlazoCuota();
             saveState();
             recalculateTable();
         }
@@ -545,6 +716,9 @@
                 creditAmount: 5000000,
                 interestRate: 1.5,
                 defaultAbono: 500000,
+                rateMode: 'directa',
+                plazo: null,
+                cuotaFija: null,
                 customAbonos: {},
                 paidStatus: {}
             };
@@ -605,39 +779,104 @@
         function recalculateTable() {
             const active = appState.credits[appState.activeId];
             const initialAmount = parseFloat(document.getElementById('creditAmount').value) || 0;
-            const rate = (parseFloat(document.getElementById('interestRate').value) || 0) / 100;
+            const rawRate = (parseFloat(document.getElementById('interestRate').value) || 0) / 100;
             const defaultAbono = parseFloat(document.getElementById('defaultAbono').value) || 0;
+            const rateMode = document.getElementById('rateMode').value || 'directa';
+            const plazoInput = parseInt(document.getElementById('plazo').value, 10);
+            const cuotaFijaInput = parseFloat(document.getElementById('cuotaFija').value);
+            const plazo = Number.isFinite(plazoInput) && plazoInput > 0 ? plazoInput : 0;
+            const cuotaFija = Number.isFinite(cuotaFijaInput) && cuotaFijaInput > 0 ? cuotaFijaInput : 0;
+
+            // Apply rate calculation mode (excel = EA / 12)
+            let rate = rawRate;
+            if (rateMode === 'excel' && rawRate > 0) {
+                const tasaEA = Math.pow(1 + rawRate, 12) - 1;
+                rate = tasaEA / 12;
+            }
+
+            // Determine base monthly cuota (full payment: interest + capital)
+            let baseCuota = 0;
+            if (cuotaFija > 0) {
+                baseCuota = cuotaFija;
+            } else if (plazo > 0 && initialAmount > 0) {
+                if (rate > 0) {
+                    baseCuota = initialAmount * (rate * Math.pow(1 + rate, plazo)) / (Math.pow(1 + rate, plazo) - 1);
+                } else {
+                    baseCuota = initialAmount / plazo;
+                }
+            }
+            const useAmortization = baseCuota > 0;
 
             let currentBalance = initialAmount;
             let totalInterest = 0, totalPaidProjected = 0, paidToDate = 0, paidCount = 0;
             let currentPendingReal = initialAmount;
             let month = 1;
+            const maxMonths = 360;
 
             const tbody = document.getElementById('scheduleBody');
             tbody.innerHTML = '';
             generatedRowData = {}; // Clear cache
 
-            while (currentBalance > 0 && month <= 180) {
-                const interestForMonth = Math.round(currentBalance * rate);
-                let abono = active.customAbonos[month] !== undefined ? active.customAbonos[month] : defaultAbono;
-                if (abono > currentBalance) abono = currentBalance;
+            while (currentBalance >= 0.01 && month <= maxMonths) {
+                const interestForMonth = round2(currentBalance * rate);
 
-                const totalMonthPayment = interestForMonth + abono;
-                const finalBalance = Math.max(0, currentBalance - abono);
+                // Extra abono (custom for this month, else default)
+                let extraAbono = active.customAbonos[month] !== undefined ? active.customAbonos[month] : defaultAbono;
+                if (extraAbono < 0) extraAbono = 0;
+
+                let abono; // capital reduction this month
+                let totalMonthPayment;
+
+                if (useAmortization) {
+                    // Cap cuota if remaining debt is smaller than one full cuota;
+                    // when plazo is the driver, force the last month to close the balance exactly.
+                    let cuotaThisMonth = baseCuota;
+                    if (currentBalance + interestForMonth < cuotaThisMonth) {
+                        cuotaThisMonth = currentBalance + interestForMonth;
+                    }
+                    if (plazo > 0 && month === plazo) {
+                        cuotaThisMonth = round2(currentBalance + interestForMonth);
+                    }
+                    let baseCapital = round2(cuotaThisMonth - interestForMonth);
+                    if (baseCapital < 0) baseCapital = 0;
+
+                    // Cap extra so we don't overpay the balance
+                    if (baseCapital + extraAbono > currentBalance) {
+                        extraAbono = Math.max(0, currentBalance - baseCapital);
+                    }
+                    abono = baseCapital + extraAbono;
+                    totalMonthPayment = interestForMonth + abono;
+
+                    // Safety: cuota can't cover interest and no extra -> would loop forever
+                    if (abono <= 0) {
+                        alert('La cuota fija no cubre los intereses del mes. Ajusta la cuota o agrega un abono extra.');
+                        break;
+                    }
+                } else {
+                    if (extraAbono > currentBalance) extraAbono = currentBalance;
+                    abono = extraAbono;
+                    totalMonthPayment = interestForMonth + abono;
+
+                    if (abono <= 0) {
+                        // No amortization defined and no abono -> nothing to project
+                        break;
+                    }
+                }
+
+                const finalBalance = Math.max(0, round2(currentBalance - abono));
 
                 totalInterest += interestForMonth;
                 totalPaidProjected += totalMonthPayment;
 
                 const paidDate = active.paidStatus[month];
                 const isPaid = !!paidDate;
-                
+
                 if (isPaid) {
                     paidToDate += totalMonthPayment;
                     paidCount++;
                     currentPendingReal = finalBalance;
                 }
 
-                // Save to cache for receipts
                 generatedRowData[month] = {
                     balanceInit: currentBalance,
                     interest: interestForMonth,
@@ -646,19 +885,22 @@
                     balanceFinal: finalBalance
                 };
 
+                // In amortization mode the row input represents the EXTRA (not the full abono)
+                const rowInputValue = useAmortization ? extraAbono : abono;
+
                 const tr = document.createElement('tr');
                 if (isPaid) tr.classList.add('row-paid');
 
                 tr.innerHTML = `
                     <td>
-                        <input type="checkbox" class="checkbox-paid" ${isPaid ? 'checked' : ''} 
+                        <input type="checkbox" class="checkbox-paid" ${isPaid ? 'checked' : ''}
                                onchange="togglePaid(${month}, this.checked)">
                     </td>
                     <td><strong>${month}</strong></td>
                     <td>${formatCOP(currentBalance)}</td>
                     <td>${formatCOP(interestForMonth)}</td>
                     <td>
-                        <input type="number" class="input-abono" value="${abono}" min="0" 
+                        <input type="number" class="input-abono" value="${rowInputValue}" min="0"
                                onchange="updateAbono(${month}, this.value)">
                     </td>
                     <td><strong>${formatCOP(totalMonthPayment)}</strong></td>
@@ -671,7 +913,7 @@
                 tbody.appendChild(tr);
                 currentBalance = finalBalance;
                 month++;
-                if (currentBalance <= 0) break;
+                if (currentBalance < 0.01) break;
             }
 
             // Update KPIs
